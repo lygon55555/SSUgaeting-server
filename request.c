@@ -156,7 +156,7 @@ void parse_message(char* message, user_info* user, chat* chatinfo, char* respons
 	int fields;
 
 	mysql_init(&mysql);
-	if(!mysql_real_connect(&mysql, "localhost", "root", "1234", NULL, 3306, (char *) NULL, 0))
+	if(!mysql_real_connect(&mysql, "localhost", "root", NULL, NULL, 3306, (char *) NULL, 0))
 	{
 		printf("MYSQL CONNECTION FAILED...\n");
 		printf("%s\n", mysql_error(&mysql));
@@ -241,11 +241,11 @@ void parse_message(char* message, user_info* user, chat* chatinfo, char* respons
             strcpy(header , strtok(message,"$"));
             strcpy(user->id ,strtok(NULL,"$"));
             strcpy(user->password , strtok(NULL,"$"));
+            strcpy(user->email , strtok(NULL,"$"));            
             strcpy(user->name ,strtok(NULL,"$"));
-            strcpy(user->email , strtok(NULL,"$"));
             strcpy(user->sex , strtok(NULL,"$"));
             
-            sprintf(query, "INSERT INTO profile (id, password, name, email, sex) VALUES ('%s', '%s', '%s', '%s', '%s')", user->id, user->password, user->name, user->email, user->sex);
+            sprintf(query, "INSERT INTO profile (id, password, email, name, sex) VALUES ('%s', '%s', '%s', '%s', '%s')", user->id, user->password, user->email, user->name, user->sex);
             
             if(mysql_query(&mysql, query))
 			{
@@ -275,7 +275,7 @@ void parse_message(char* message, user_info* user, chat* chatinfo, char* respons
             strcpy(temp.password , strtok(NULL,"$"));
             puts(temp.password);
             
-            sprintf(query, "SELECT * FROM profile WHERE id = '%s', password = '%s'", temp.id, temp.password);
+            sprintf(query, "SELECT * FROM profile WHERE id = '%s' and password = '%s'", temp.id, temp.password);
             
             if(mysql_query(&mysql, query))
             {
@@ -361,13 +361,11 @@ void parse_message(char* message, user_info* user, chat* chatinfo, char* respons
 				{
 					char asdf[1024];
 					puts("camein");
-					sprintf(asdf,"%s$%s$%s$%s$%s$%s$%s$%s$%s$%s$%s$%s$%s$%s$%s$%s$%s&",
-					sql_row[0],sql_row[1],sql_row[2],sql_row[3],sql_row[4],sql_row[5],sql_row[6],sql_row[7],sql_row[8],sql_row[9],sql_row[10],sql_row[11],sql_row[12],sql_row[13],sql_row[14],sql_row[15],sql_row[16]);
+					sprintf(asdf,"%s&", sql_row[0]);
 					int len = strlen(asdf);
-					sprintf(response_packet,"HTTP/1.1 200 OK\r\nContent-Length: %d\r\nContent-Type:text/plain\r\n\r\n%s$%s$%s$%s$%s$%s$%s$%s$%s$%s$%s$%s$%s$%s$%s$%s$%s&",len,user->id,user->password,user->email,user->name,user->sex,user->statusmsg,user->age,user->height,user->address,user->hobby,user->college,user->major,user->imageURL,user->religion,user->club,user->abroadexp,user->milserv);
+					sprintf(response_packet,"HTTP/1.1 200 OK\r\nContent-Length: %d\r\nContent-Type:text/plain\r\n\r\n%s&",len, sql_row[0]);
 					puts(response_packet);
 				}
-				
             }
             
             /*
@@ -398,7 +396,7 @@ void parse_message(char* message, user_info* user, chat* chatinfo, char* respons
             strcpy(temp.id, strtok(NULL,"$"));
             strcpy(temp.email, strtok(NULL,"$"));
             
-			sprintf(query, "SELECT * FROM profile WHERE id = '%s', email = '%s'", temp.id, temp.email);
+			sprintf(query, "SELECT * FROM profile WHERE id = '%s' and email = '%s'", temp.id, temp.email);
 			
 			if(mysql_query(&mysql, query))
 			{
@@ -418,14 +416,7 @@ void parse_message(char* message, user_info* user, chat* chatinfo, char* respons
 				}
 				else
 				{
-					char asdf[1024];
-					puts("camein");
-					sprintf(asdf,"%s$%s$%s$%s$%s$%s$%s$%s$%s$%s$%s$%s$%s$%s$%s$%s$%s&",
-					sql_row[0],sql_row[1],sql_row[2],sql_row[3],sql_row[4],sql_row[5],sql_row[6],sql_row[7],sql_row[8],sql_row[9],sql_row[10],sql_row[11],sql_row[12],sql_row[13],sql_row[14],sql_row[15],sql_row[16]);
-					int len = strlen(asdf);
-					sprintf(response_packet,"HTTP/1.1 200 OK\r\nContent-Length: %d\r\nContent-Type:text/plain\r\n\r\n%s$%s$%s$%s$%s$%s$%s$%s$%s$%s$%s$%s$%s$%s$%s$%s$%s&",
-					len,sql_row[0],sql_row[1],sql_row[2],sql_row[3],sql_row[4],sql_row[5],sql_row[6],sql_row[7],sql_row[8],sql_row[9],sql_row[10],sql_row[11],sql_row[12],sql_row[13],sql_row[14],sql_row[15],sql_row[16]);
-					puts(response_packet);
+					sprintf(response_packet,"HTTP/1.1 200 OK\r\nContent-Length: 5\r\nContent-Type:text/plain\r\n\r\nOK&");
 				}
 			}
 
@@ -459,21 +450,25 @@ void parse_message(char* message, user_info* user, chat* chatinfo, char* respons
 			}
         	else
 				printf("5 ssugaeting DB connected\n");
-				
-				
-				
-				
-        	//		 ask and check
-        	
-        	
-        	
-        	
-        	        	
+				       	
             strcpy(header, strtok(message,"$"));
             strcpy(user->id, strtok(NULL,"$"));
             strcpy(user->password, strtok(NULL,"$"));
             
-            sprintf(response_packet,"HTTP/1.1 200 OK\r\nContent-Length: 5\r\nContent-Type:text/plain\r\n\r\nOK&");
+            sprintf(query, "UPDATE profile SET password = '%s' WHERE id = '%s'", user->password, user->id);
+            
+            if(mysql_query(&mysql, query))
+			{
+				printf("5 query failed...\n");
+				printf("%s\n", mysql_error(&mysql));
+				exit(1);
+			}
+			else
+			{
+				printf("password changed\n");
+				sprintf(response_packet,"HTTP/1.1 200 OK\r\nContent-Length: 5\r\nContent-Type:text/plain\r\n\r\nOK&");
+            }
+                       
             break;
 
         case '6' :      //filter information message   
@@ -498,12 +493,12 @@ void parse_message(char* message, user_info* user, chat* chatinfo, char* respons
             strcpy(filter.heightto,strtok(NULL,"$"));
             strcpy(filter.religion,strtok(NULL,"$"));
             strcpy(filter.hobby,strtok(NULL,"$"));
-            strcpy(filter.college,strtok(NULL,"$"));
+            strcpy(filter.college,strtok(NULL,"$")); 
             strcpy(filter.club,strtok(NULL,"$"));
             strcpy(filter.abroadexp,strtok(NULL,"$"));
             strcpy(filter.milserv,strtok(NULL,"$"));
             
-            sprintf(query, "SELECT * FROM profile WHERE sex = '%s', '%s' < age < '%s', '%s' < height < '%s', religion = '%s', hobby = '%s', college = '%s', circle = '%s', abroadExperience = '%s', militaryStatus = '%s'", 
+            sprintf(query, "SELECT * FROM profile WHERE sex = '%s' and '%s' < age < '%s' and '%s' < height < '%s' and religion = '%s' and hobby = '%s' and college = '%s' and circle = '%s' and abroadExperience = '%s' and militaryStatus = '%s'", 
             filter.mysex, filter.fromage, filter.toage, filter.heightfrom, filter.heightto, filter.religion, filter.hobby, filter.college, filter.club, filter.abroadexp, filter.milserv);
             
             if(mysql_query(&mysql, query))
@@ -525,7 +520,7 @@ void parse_message(char* message, user_info* user, chat* chatinfo, char* respons
 				else
 				{
 				}
-					
+			}
 
 
 
@@ -597,7 +592,7 @@ void parse_message(char* message, user_info* user, chat* chatinfo, char* respons
             
             
             //ask and check
-			sprintf(query, "SELECT * FROM profile WHERE id = '%s', email = '%s'", temp->id, temp->email);
+			sprintf(query, "SELECT * FROM profile WHERE id = '%s', email = '%s'", temp.id, temp.email);
                         
                         //get chatting lists from DB and save profile data to user_info for every chattingroom
             numchattingroom = 1; //count number of chattingrooms in possession "CHANGE IF DB IS IMPLEMENTED"
