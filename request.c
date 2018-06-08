@@ -258,7 +258,7 @@ void parse_message(char* message, user_info* user, chat* chatinfo, char* respons
           	else	//login ok
           	{	
           		sql_res = mysql_store_result(&mysql);
-          		sql_row = mysql_fetch_low(sql_res);
+          		sql_row = mysql_fetch_row(sql_res);
           		
                 char asdf[1024];
 				puts("camein");
@@ -309,7 +309,7 @@ void parse_message(char* message, user_info* user, chat* chatinfo, char* respons
             else
             {	
 				sql_res = mysql_store_result(&mysql);
-				sql_row = mysql_fetch_low(sql_res);
+				sql_row = mysql_fetch_row(sql_res);
 				
 				char asdf[1024];
 				puts("camein");
@@ -354,7 +354,7 @@ void parse_message(char* message, user_info* user, chat* chatinfo, char* respons
 			else
 			{
 				sql_res = mysql_store_result(&mysql);
-				sql_row = mysql_fetch_low(sql_res);
+				sql_row = mysql_fetch_row(sql_res);
 				
 				char asdf[1024];
 				puts("camein");
