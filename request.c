@@ -153,16 +153,17 @@ void parse_message(char* message, user_info* user, chat* chatinfo, char* respons
 	MYSQL mysql;
 	MYSQL_RES* sql_res;
 	MYSQL_ROW sql_row;
-	int fiels;
+	int fields;
 
 	mysql_init(&mysql);
 	if(!mysql_real_connect(&mysql, "localhost", "root", "1234", NULL, 3306, (char *) NULL, 0))
 	{
+		printf("MYSQL CONNECTION FAILED...\n");
 		printf("%s\n", mysql_error(&mysql));
 		exit(1);
 	}
 	else
-		printf("database connected\n");
+		printf("MYSQL CONNECTED\n");
 		
     puts (message);
     char header[10];
@@ -186,32 +187,37 @@ void parse_message(char* message, user_info* user, chat* chatinfo, char* respons
         case '0' :      //id repetition check message
         	if(mysql_query(&mysql, "USE ssugaeting"))
 			{
+				printf("0 ssugaeting DB connection failed...\n");
 				printf("%s\n", mysql_error(&mysql));
 				exit(1);
 			}
+			else
+				printf("0 ssugaeting DB connected\n");
 			
-            strcpy(header , strtok(message,"$"));
+            strcpy(header, strtok(message,"$"));
             strcpy(user->id, strtok(NULL,"$"));
             int sameidexist=1;
             
             sprintf(query, "SELECT * FROM profile WHERE id = '%s'", user->id);
             
             if(mysql_query(&mysql, query))
-			{	
+			{
+				printf("0 query failed...\n");
 				printf("%s\n", mysql_error(&mysql));
 				exit(1);
 			}
 			
 			sql_res = mysql_store_result(&mysql);
-			sql_row - mysql_fetch_row(sql_res);
+			sql_row = mysql_fetch_row(sql_res);
 			
 			if(sql_row == NULL)
 			{
-				printf("no data found in DB\n");
+				printf("no data found in DB (id repetition check)\n");
 				sameidexist = 1;
 			}
 			else
 			{
+				printf("same id exists\n");
 				sameidexist = 0;
             }
             
@@ -225,9 +231,12 @@ void parse_message(char* message, user_info* user, chat* chatinfo, char* respons
         case '1' :      //create account message
         	if(mysql_query(&mysql, "USE ssugaeting"))
 			{
+				printf("1 ssugaeting DB connection failed...\n");
 				printf("%s\n", mysql_error(&mysql));
 				exit(1);
 			}
+			else
+				printf("1 ssugaeting DB connected\n");
 						
             strcpy(header , strtok(message,"$"));
             strcpy(user->id ,strtok(NULL,"$"));
@@ -240,6 +249,7 @@ void parse_message(char* message, user_info* user, chat* chatinfo, char* respons
             
             if(mysql_query(&mysql, query))
 			{
+				printf("1 query failed...\n");
 				printf("%s\n", mysql_error(&mysql));
 				exit(1);
 			}
@@ -250,10 +260,13 @@ void parse_message(char* message, user_info* user, chat* chatinfo, char* respons
         case '2' :      //login id/pw message
             if(mysql_query(&mysql, "USE ssugaeting"))
 			{
+				printf("2 ssugaeting DB connection failed...\n");
 				printf("%s\n", mysql_error(&mysql));
 				exit(1);
 			}
-			
+			else
+				printf("2 ssugaeting DB connected\n");
+				
             strcpy(header , strtok(message,"$"));
             
             strcpy(temp.id , strtok(NULL,"$"));
@@ -264,23 +277,33 @@ void parse_message(char* message, user_info* user, chat* chatinfo, char* respons
             
             sprintf(query, "SELECT * FROM profile WHERE id = '%s', password = '%s'", temp->id, temp->password);
             
-            if(mysql_query(&mysql, query))	//login fail
+            if(mysql_query(&mysql, query))
             {
-            	sprintf(response_packet,"HTTP/1.1 200 OK\r\nContent-Length: 5\r\nContent-Type:text/plain\r\n\r\nFAIL&");	
+            	printf("2 query failed...\n");
+				printf("%s\n", mysql_error(&mysql));
+				exit(1);
 			}		
-          	else	//login ok
+          	else
           	{	
           		sql_res = mysql_store_result(&mysql);
           		sql_row = mysql_fetch_row(sql_res);
           		
-                char asdf[1024];
-				puts("camein");
-				sprintf(asdf,"%s$%s$%s$%s$%s$%s$%s$%s$%s$%s$%s$%s$%s$%s$%s$%s$%s&",
-				sql_row[0],sql_row[1],sql_row[2],sql_row[3],sql_row[4],sql_row[5],sql_row[6],sql_row[7],sql_row[8],sql_row[9],sql_row[10],sql_row[11],sql_row[12],sql_row[13],sql_row[14],sql_row[15],sql_row[16]);
-				int len = strlen(asdf);
-				sprintf(response_packet,"HTTP/1.1 200 OK\r\nContent-Length: %d\r\nContent-Type:text/plain\r\n\r\n%s$%s$%s$%s$%s$%s$%s$%s$%s$%s$%s$%s$%s$%s$%s$%s$%s&",
-				len,sql_row[0],sql_row[1],sql_row[2],sql_row[3],sql_row[4],sql_row[5],sql_row[6],sql_row[7],sql_row[8],sql_row[9],sql_row[10],sql_row[11],sql_row[12],sql_row[13],sql_row[14],sql_row[15],sql_row[16]);
-				puts(response_packet);
+          		if(sql_row == NULL)
+          		{
+          			printf("no data found in DB (no same id, password)\n");
+          			sprintf(response_packet,"HTTP/1.1 200 OK\r\nContent-Length: 5\r\nContent-Type:text/plain\r\n\r\nFAIL&");
+          		}
+          		else
+          		{
+	          		char asdf[1024];
+					puts("camein");
+					sprintf(asdf,"%s$%s$%s$%s$%s$%s$%s$%s$%s$%s$%s$%s$%s$%s$%s$%s$%s&",
+					sql_row[0],sql_row[1],sql_row[2],sql_row[3],sql_row[4],sql_row[5],sql_row[6],sql_row[7],sql_row[8],sql_row[9],sql_row[10],sql_row[11],sql_row[12],sql_row[13],sql_row[14],sql_row[15],sql_row[16]);
+					int len = strlen(asdf);
+					sprintf(response_packet,"HTTP/1.1 200 OK\r\nContent-Length: %d\r\nContent-Type:text/plain\r\n\r\n%s$%s$%s$%s$%s$%s$%s$%s$%s$%s$%s$%s$%s$%s$%s$%s$%s&",
+					len,sql_row[0],sql_row[1],sql_row[2],sql_row[3],sql_row[4],sql_row[5],sql_row[6],sql_row[7],sql_row[8],sql_row[9],sql_row[10],sql_row[11],sql_row[12],sql_row[13],sql_row[14],sql_row[15],sql_row[16]);
+					puts(response_packet);
+				}
             }
             
             /*
@@ -306,31 +329,45 @@ void parse_message(char* message, user_info* user, chat* chatinfo, char* respons
         case '3' :      //email check message to find id
         	if(mysql_query(&mysql, "USE ssugaeting"))
 			{	
+				printf("3 ssugaeting DB connection failed...\n");
 				printf("%s\n", mysql_error(&mysql));
 				exit(1);
 			}
-			
+			else
+				printf("3 ssugaeting DB connected\n");
+				
             strcpy(header, strtok(message,"$"));
             strcpy(temp.email, strtok(NULL,"$"));
             
            	sprintf(query, "SELECT * FROM profile WHERE email = '%s'", temp->email);            
             
-            if(mysql_query(&mysql, query))	//no same email
+            if(mysql_query(&mysql, query))
             {
-            	sprintf(response_packet,"HTTP/1.1 200 OK\r\nContent-Length: 5\r\nContent-Type:text/plain\r\n\r\nFAIL&");
+            	printf("3 query failed...\n");
+				printf("%s\n", mysql_error(&mysql));
+				exit(1);
             }
             else
             {	
 				sql_res = mysql_store_result(&mysql);
 				sql_row = mysql_fetch_row(sql_res);
+            	
+				if(sql_row == NULL)
+				{
+					printf("no data found in DB (no same email)\n");
+					sprintf(response_packet,"HTTP/1.1 200 OK\r\nContent-Length: 5\r\nContent-Type:text/plain\r\n\r\nFAIL&");
+				}
+				else
+				{
+					char asdf[1024];
+					puts("camein");
+					sprintf(asdf,"%s$%s$%s$%s$%s$%s$%s$%s$%s$%s$%s$%s$%s$%s$%s$%s$%s&",
+					sql_row[0],sql_row[1],sql_row[2],sql_row[3],sql_row[4],sql_row[5],sql_row[6],sql_row[7],sql_row[8],sql_row[9],sql_row[10],sql_row[11],sql_row[12],sql_row[13],sql_row[14],sql_row[15],sql_row[16]);
+					int len = strlen(asdf);
+					sprintf(response_packet,"HTTP/1.1 200 OK\r\nContent-Length: %d\r\nContent-Type:text/plain\r\n\r\n%s$%s$%s$%s$%s$%s$%s$%s$%s$%s$%s$%s$%s$%s$%s$%s$%s&",len,user->id,user->password,user->email,user->name,user->sex,user->statusmsg,user->age,user->height,user->address,user->hobby,user->college,user->major,user->imageURL,user->religion,user->club,user->abroadexp,user->milserv);
+					puts(response_packet);
+				}
 				
-				char asdf[1024];
-				puts("camein");
-				sprintf(asdf,"%s$%s$%s$%s$%s$%s$%s$%s$%s$%s$%s$%s$%s$%s$%s$%s$%s&",
-				sql_row[0],sql_row[1],sql_row[2],sql_row[3],sql_row[4],sql_row[5],sql_row[6],sql_row[7],sql_row[8],sql_row[9],sql_row[10],sql_row[11],sql_row[12],sql_row[13],sql_row[14],sql_row[15],sql_row[16]);
-				int len = strlen(asdf);
-				sprintf(response_packet,"HTTP/1.1 200 OK\r\nContent-Length: %d\r\nContent-Type:text/plain\r\n\r\n%s$%s$%s$%s$%s$%s$%s$%s$%s$%s$%s$%s$%s$%s$%s$%s$%s&",len,user->id,user->password,user->email,user->name,user->sex,user->statusmsg,user->age,user->height,user->address,user->hobby,user->college,user->major,user->imageURL,user->religion,user->club,user->abroadexp,user->milserv);
-				puts(response_packet);
             }
             
             /*
@@ -350,33 +387,46 @@ void parse_message(char* message, user_info* user, chat* chatinfo, char* respons
         case '4' :      //email/id check message to find pw
         	if(mysql_query(&mysql, "USE ssugaeting"))
 			{
+				printf("4 ssugaeting DB connection failed...\n");
 				printf("%s\n", mysql_error(&mysql));
 				exit(1);
 			}
-			
+			else
+				printf("4 ssugaeting DB connected\n");
+				
             strcpy(header, strtok(message,"$"));
             strcpy(temp.id, strtok(NULL,"$"));
             strcpy(temp.email, strtok(NULL,"$"));
             
 			sprintf(query, "SELECT * FROM profile WHERE id = '%s', email = '%s'", temp->id, temp->email);
 			
-			if(mysql_query(&mysql, query))	//no same id, email
+			if(mysql_query(&mysql, query))
 			{
-				sprintf(response_packet,"HTTP/1.1 200 OK\r\nContent-Length: 5\r\nContent-Type:text/plain\r\n\r\nFAIL&");
+				printf("4 query failed...\n");
+				printf("%s\n", mysql_error(&mysql));
+				exit(1);
 			}
 			else
 			{
 				sql_res = mysql_store_result(&mysql);
 				sql_row = mysql_fetch_row(sql_res);
 				
-				char asdf[1024];
-				puts("camein");
-				sprintf(asdf,"%s$%s$%s$%s$%s$%s$%s$%s$%s$%s$%s$%s$%s$%s$%s$%s$%s&",
-				sql_row[0],sql_row[1],sql_row[2],sql_row[3],sql_row[4],sql_row[5],sql_row[6],sql_row[7],sql_row[8],sql_row[9],sql_row[10],sql_row[11],sql_row[12],sql_row[13],sql_row[14],sql_row[15],sql_row[16]);
-				int len = strlen(asdf);
-				sprintf(response_packet,"HTTP/1.1 200 OK\r\nContent-Length: %d\r\nContent-Type:text/plain\r\n\r\n%s$%s$%s$%s$%s$%s$%s$%s$%s$%s$%s$%s$%s$%s$%s$%s$%s&",
-				len,sql_row[0],sql_row[1],sql_row[2],sql_row[3],sql_row[4],sql_row[5],sql_row[6],sql_row[7],sql_row[8],sql_row[9],sql_row[10],sql_row[11],sql_row[12],sql_row[13],sql_row[14],sql_row[15],sql_row[16]);
-				puts(response_packet);
+				if(sql_row == NULL)
+				{
+					printf("no data found in DB (no same id, email)\n");
+					sprintf(response_packet,"HTTP/1.1 200 OK\r\nContent-Length: 5\r\nContent-Type:text/plain\r\n\r\nFAIL&");
+				}
+				else
+				{
+					char asdf[1024];
+					puts("camein");
+					sprintf(asdf,"%s$%s$%s$%s$%s$%s$%s$%s$%s$%s$%s$%s$%s$%s$%s$%s$%s&",
+					sql_row[0],sql_row[1],sql_row[2],sql_row[3],sql_row[4],sql_row[5],sql_row[6],sql_row[7],sql_row[8],sql_row[9],sql_row[10],sql_row[11],sql_row[12],sql_row[13],sql_row[14],sql_row[15],sql_row[16]);
+					int len = strlen(asdf);
+					sprintf(response_packet,"HTTP/1.1 200 OK\r\nContent-Length: %d\r\nContent-Type:text/plain\r\n\r\n%s$%s$%s$%s$%s$%s$%s$%s$%s$%s$%s$%s$%s$%s$%s$%s$%s&",
+					len,sql_row[0],sql_row[1],sql_row[2],sql_row[3],sql_row[4],sql_row[5],sql_row[6],sql_row[7],sql_row[8],sql_row[9],sql_row[10],sql_row[11],sql_row[12],sql_row[13],sql_row[14],sql_row[15],sql_row[16]);
+					puts(response_packet);
+				}
 			}
 
             /*
@@ -403,11 +453,21 @@ void parse_message(char* message, user_info* user, chat* chatinfo, char* respons
         case '5' :      //new password setting
         	if(mysql_query(&mysql, "USE ssugaeting"))
 			{
+				printf("5 ssugaeting DB connection failed...\n");
 				printf("%s\n", mysql_error(&mysql));
 				exit(1);
 			}
-        	
+        	else
+				printf("5 ssugaeting DB connected\n");
+				
+				
+				
+				
         	//		 ask and check
+        	
+        	
+        	
+        	
         	        	
             strcpy(header, strtok(message,"$"));
             strcpy(user->id, strtok(NULL,"$"));
@@ -419,10 +479,13 @@ void parse_message(char* message, user_info* user, chat* chatinfo, char* respons
         case '6' :      //filter information message   
         	if(mysql_query(&mysql, "USE ssugaeting"))
 			{
+				printf("6 ssugaeting DB connection failed...\n");
 				printf("%s\n", mysql_error(&mysql));
 				exit(1);
 			}
-			
+			else
+				printf("6 ssugaeting DB connected\n");
+				
             //lookup DB with filter information
             int numfilteredusers=0;
             numfilteredusers = 1; // enter #num of filtered users which are to send back as response_packet
@@ -445,9 +508,29 @@ void parse_message(char* message, user_info* user, chat* chatinfo, char* respons
             
             if(mysql_query(&mysql, query))
 			{
-				numfilteredusers = 0;	//no filtered user
+				printf("6 query failed...\n");
+				printf("%s\n", mysql_error(&mysql));
+				exit(1);
 			}
-                                    
+			else
+			{
+          		sql_res = mysql_store_result(&mysql);
+          		sql_row = mysql_fetch_row(sql_res);
+          		
+          		if(sql_row == NULL)
+          		{
+          			printf("no data found in DB (no filtered profile)\n");
+					numfilteredusers = 0;	//no filtered user
+				}
+				else
+				{
+				}
+					
+
+
+
+
+                          
             if (numfilteredusers==0)
                 sprintf(response_packet,"HTTP/1.1 200 OK\r\nContent-Length: 5\r\nContent-Type:text/plain\r\n\r\nFAIL&");
             else
