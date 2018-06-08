@@ -198,9 +198,22 @@ void parse_message(char* message, user_info* user, chat* chatinfo, char* respons
             
             if(mysql_query(&mysql, query))
 			{	
-				printf("id 중복 발생\n");
-				sameidexist = 0
+				printf("%s\n", mysql_error(&mysql));
+				exit(1);
 			}
+			
+			sql_res = mysql_store_result(&mysql);
+			sql_row - mysql_fetch_row(sql_res);
+			
+			if(sql_row == NULL)
+			{
+				printf("no data found in DB\n");
+				sameidexist = 1;
+			}
+			else
+			{
+				sameidexist = 0;
+            }
             
             if(sameidexist==0)	//Fail
                 sprintf(response_packet,"HTTP/1.1 200 OK\r\nContent-Length: 5\r\nContent-Type:text/plain\r\n\r\nFAIL&");
