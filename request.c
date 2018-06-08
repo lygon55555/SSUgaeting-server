@@ -275,7 +275,7 @@ void parse_message(char* message, user_info* user, chat* chatinfo, char* respons
             strcpy(temp.password , strtok(NULL,"$"));
             puts(temp.password);
             
-            sprintf(query, "SELECT * FROM profile WHERE id = '%s', password = '%s'", temp->id, temp->password);
+            sprintf(query, "SELECT * FROM profile WHERE id = '%s', password = '%s'", temp.id, temp.password);
             
             if(mysql_query(&mysql, query))
             {
@@ -339,7 +339,7 @@ void parse_message(char* message, user_info* user, chat* chatinfo, char* respons
             strcpy(header, strtok(message,"$"));
             strcpy(temp.email, strtok(NULL,"$"));
             
-           	sprintf(query, "SELECT * FROM profile WHERE email = '%s'", temp->email);            
+           	sprintf(query, "SELECT * FROM profile WHERE email = '%s'", temp.email);            
             
             if(mysql_query(&mysql, query))
             {
@@ -398,7 +398,7 @@ void parse_message(char* message, user_info* user, chat* chatinfo, char* respons
             strcpy(temp.id, strtok(NULL,"$"));
             strcpy(temp.email, strtok(NULL,"$"));
             
-			sprintf(query, "SELECT * FROM profile WHERE id = '%s', email = '%s'", temp->id, temp->email);
+			sprintf(query, "SELECT * FROM profile WHERE id = '%s', email = '%s'", temp.id, temp.email);
 			
 			if(mysql_query(&mysql, query))
 			{
